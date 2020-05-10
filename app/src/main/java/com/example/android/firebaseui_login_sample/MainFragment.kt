@@ -44,9 +44,12 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         observeAuthenticationState()
 
-        binding.authButton.setOnClickListener {
-            launchSignInFlow()
+        binding.authButton.setOnClickListener { launchSignInFlow() }
+        binding.settingsBtn.setOnClickListener {
+            val action = MainFragmentDirections.actionMainFragmentToSettingsFragment()
+            findNavController().navigate(action)
         }
+
     }
 
     // TODO Listen to the result of the sign in process by filter for when
@@ -76,19 +79,44 @@ class MainFragment : Fragment() {
      * If there is a logged in user: (1) show a logout button and (2) display their name.
      * If there is no logged in user: show a login button
      */
+    // TODO Use the authenticationState variable from LoginViewModel to update the UI
+    //  accordingly.
+    //
+    //  TODO If there is a logged-in user, authButton should display Logout. If the
+    //   user is logged in, you can customize the welcome message by utilizing
+    //   getFactWithPersonalition(). I
+
+    // TODO If there is no logged in user, authButton should display Login and launch the sign
+    //  in screen when clicked. There should also be no personalization of the message
+    //  displayed.
     private fun observeAuthenticationState() {
         val factToDisplay = viewModel.getFactToDisplay(requireContext())
 
-        // TODO Use the authenticationState variable from LoginViewModel to update the UI
-        //  accordingly.
-        //
-        //  TODO If there is a logged-in user, authButton should display Logout. If the
-        //   user is logged in, you can customize the welcome message by utilizing
-        //   getFactWithPersonalition(). I
+        viewModel.authenticationState.observe(viewLifecycleOwner, Observer { authenticationState ->
+            when (authenticationState) {
+                LoginViewModel.AuthenticationState.AUTHENTICATED -> {
+                    binding.authButton.text = getString(R.string.logout_button_text)
+                    binding.authButton.setOnClickListener {
+                        // TODO implement logging out user in next step
+                        AuthUI.getInstance().signOut(requireContext())
+                    }
 
-        // TODO If there is no logged in user, authButton should display Login and launch the sign
-        //  in screen when clicked. There should also be no personalization of the message
-        //  displayed.
+                    // TODO 2. If the user is logged in,
+                    // you can customize the welcome message they see by
+                    // utilizing the getFactWithPersonalization() function provided
+                    binding.welcomeText.text = getFactWithPersonalization(factToDisplay)
+
+                }
+                else -> {
+                    // TODO 3. Lastly, if there is no logged-in user,
+                    // auth_button should display Login and
+                    //  launch the sign in screen when clicked.
+                    binding.authButton.text = getString(R.string.login_button_text)
+                    binding.authButton.setOnClickListener { launchSignInFlow() }
+                    binding.welcomeText.text = factToDisplay
+                }
+            }
+        })
     }
 
 
